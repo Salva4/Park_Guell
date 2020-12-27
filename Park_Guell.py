@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 import heapq as hq
+import sys
 
 G = nx.Graph()
 G.add_weighted_edges_from([[1, 2, 82],
@@ -63,30 +64,49 @@ def grafica_graf(G):
 	nx.draw_networkx_edge_labels(G, pos, edge_labels = labels)
 	plt.show()
 
-def ajunta(n1, nELIMINAR, n2):
+'''def ajunta(n1, nELIMINAR, n2):
 	pes1 = pes(n1, nELIMINAR)
 	pes2 = pes(nELIMINAR, n2)
 	G.add_weighted_edges_from([[n1, n2, pes1+pes2]])
-	G.remove_node(nELIMINAR)
+	G.remove_node(nELIMINAR)'''
 
-# FALLA: 23 -> 19 -> 23.1 !!
-def duplica_nodes(G): # requeriment: màxim de veïns d'un node en tot el graf: 5. (màxim actual: 4). Es compleix :)
+
+'''def duplica_nodes_i_GRAFS(G): # requeriment: màxim de veïns d'un node en tot el graf: 4. (màxim actual: 4). Es compleix :)
 	global labels
+	s = set()
 	nodes_a_modificar = []
 	for node in nodes:
 		veins = list(G.neighbors(node))
-		if len(veins) >= 4:
+		if len(veins) == 5:
+			print("ERROR: #veins = 5")
+			sys.exit()
+		elif len(veins) == 4:
 			nodes_a_modificar.append(node)
 
 	for node in nodes_a_modificar:
+		G_mod = G.copy()
 		veins = list(G.neighbors(node))
 		nou_node = node + .1
 		G.add_weighted_edges_from([[node, nou_node, 0]])
 		G.add_weighted_edges_from([[nou_node, vei, pes(node, vei)] for vei in veins])
-		labels = nx.get_edge_attributes(G, 'weight')
+		labels = nx.get_edge_attributes(G, 'weight')'''
+
+def dual(G):
+	H = nx.Graph()
+	for edge in labels:
+		H.add_node(edge, weight=labels[edge])
+
+	nodesH = list(H.nodes)
+	arestes_per_afegir = []
+	for nodeH in nodesH:
+		for i,j in labels:
+			if (i,j) != nodeH and (i in nodeH or j in nodeH):
+				H.add_edge(nodeH, (i,j))
+	return H
+
 
 def camiMesLlarg(G, node_i, node_f):
-	duplica_nodes(G)
+	pass #Funció!
 	camins = list(nx.all_simple_paths(G, node_i, node_f))
 	pesos_camins = list(map(f, camins))
 	longitud_maxima = max(pesos_camins)
@@ -106,7 +126,9 @@ labels = nx.get_edge_attributes(G, 'weight')'''
 
 
 # Troba tots els camins que no repeteixin aresta ----> Hauria de cercar-ho als apunts d'algorísmia!!!
-cami_mes_llarg = camiMesLlarg(G, 1, 100)
-print(cami_mes_llarg)
+#cami_mes_llarg = camiMesLlarg(G, 1, 100)
+#print(cami_mes_llarg)
 
-grafica_graf(G)
+#grafica_graf(G)
+
+H = dual(G)
