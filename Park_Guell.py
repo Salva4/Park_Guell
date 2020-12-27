@@ -1,8 +1,8 @@
-# NOMÉS TROBA CAMINS SIMPLES (NO REPETEIX NODES)
 import networkx as nx
 import numpy as np 
 import matplotlib.pyplot as plt
 import re
+import heapq as hq
 
 G = nx.Graph()
 G.add_weighted_edges_from([[1, 2, 82],
@@ -42,26 +42,71 @@ G.add_weighted_edges_from([[1, 2, 82],
  [19, 23, 61],
  [17, 18, 71]])
 
-camins = list(nx.all_simple_paths(G, 1, 100))
-
-pos = nx.spring_layout(G)
+nodes = list(G.nodes())
+edges = list(G.edges())
 labels = nx.get_edge_attributes(G, 'weight')
 
-def grafica_graf(G):
-	nx.draw_networkx(G, pos)
-	nx.draw_networkx_edge_labels(G, pos, edge_labels = labels)
-	plt.show()
+
+def pes(i, j):
+	return labels.get((i, j), labels.get((j, i)))
 
 def f(cami):
 	s = 0
 	for nVertex in range(len(cami)-1):
-		s += labels.get((cami[nVertex],cami[nVertex+1]), labels.get((cami[nVertex+1],cami[nVertex])))
+		s += pes(cami[nVertex], cami[nVertex+1])
 	return s
 
-pesos_camins = list(map(f, camins))
-longitud_maxima = max(pesos_camins)
-iCami_mes_llarg = pesos_camins.index(longitud_maxima)
-Cami_mes_llarg = camins[iCami_mes_llarg]
-print(Cami_mes_llarg)
+def grafica_graf(G):
+	pos = nx.spring_layout(G)
+	labels = nx.get_edge_attributes(G, 'weight')
+	nx.draw_networkx(G, pos)
+	nx.draw_networkx_edge_labels(G, pos, edge_labels = labels)
+	plt.show()
+
+def ajunta(n1, nELIMINAR, n2):
+	pes1 = pes(n1, nELIMINAR)
+	pes2 = pes(nELIMINAR, n2)
+	G.add_weighted_edges_from([[n1, n2, pes1+pes2]])
+	G.remove_node(nELIMINAR)
+
+# FALLA: 23 -> 19 -> 23.1 !!
+def duplica_nodes(G): # requeriment: màxim de veïns d'un node en tot el graf: 5. (màxim actual: 4). Es compleix :)
+	global labels
+	nodes_a_modificar = []
+	for node in nodes:
+		veins = list(G.neighbors(node))
+		if len(veins) >= 4:
+			nodes_a_modificar.append(node)
+
+	for node in nodes_a_modificar:
+		veins = list(G.neighbors(node))
+		nou_node = node + .1
+		G.add_weighted_edges_from([[node, nou_node, 0]])
+		G.add_weighted_edges_from([[nou_node, vei, pes(node, vei)] for vei in veins])
+		labels = nx.get_edge_attributes(G, 'weight')
+
+def camiMesLlarg(G, node_i, node_f):
+	duplica_nodes(G)
+	camins = list(nx.all_simple_paths(G, node_i, node_f))
+	pesos_camins = list(map(f, camins))
+	longitud_maxima = max(pesos_camins)
+	iCami_mes_llarg = pesos_camins.index(longitud_maxima)
+	cami_mes_llarg = camins[iCami_mes_llarg]
+	return cami_mes_llarg
+
+
+'''# Elimina nodes innecessaris: 1, 100, 14, 15, 19. Total de nodes: 19.
+long1_2 = pes(1, 2)
+long24_100 = pes(24, 100)
+G.remove_edges_from([(1, 2), (24, 100)])
+ajunta(13, 14, 16)
+ajunta(13, 15, 12)
+ajunta(17, 19, 23)
+labels = nx.get_edge_attributes(G, 'weight')'''
+
+
+# Troba tots els camins que no repeteixin aresta ----> Hauria de cercar-ho als apunts d'algorísmia!!!
+cami_mes_llarg = camiMesLlarg(G, 1, 100)
+print(cami_mes_llarg)
 
 grafica_graf(G)
