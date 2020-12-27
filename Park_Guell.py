@@ -43,18 +43,22 @@ G.add_weighted_edges_from([[1, 2, 82],
  [19, 23, 61],
  [17, 18, 71]])
 
+
+
 nodes = list(G.nodes())
 edges = list(G.edges())
-labels = nx.get_edge_attributes(G, 'weight')
 
 
-def pes(i, j):
+def pes(G, i, j):
+	labels = nx.get_edge_attributes(G, 'weight')
 	return labels.get((i, j), labels.get((j, i)))
 
-def f(cami):
+def f(t):
+	cami = t[0]
+	G = t[1]
 	s = 0
 	for nVertex in range(len(cami)-1):
-		s += pes(cami[nVertex], cami[nVertex+1])
+		s += pes(G, cami[nVertex], cami[nVertex+1])
 	return s
 
 def grafica_graf(G):
@@ -64,71 +68,61 @@ def grafica_graf(G):
 	nx.draw_networkx_edge_labels(G, pos, edge_labels = labels)
 	plt.show()
 
-'''def ajunta(n1, nELIMINAR, n2):
-	pes1 = pes(n1, nELIMINAR)
-	pes2 = pes(nELIMINAR, n2)
-	G.add_weighted_edges_from([[n1, n2, pes1+pes2]])
-	G.remove_node(nELIMINAR)'''
+def duplica_graf(G):
+	S = set()
+	nodes_a_dividir = [3, 20, 6, 23, 11, 9]
+	for i1 in range(3):
+		for i2 in range(3):
+			for i3 in range(3):
+				for i4 in range(3):
+					for i5 in range(3):
+						for i6 in range(3):
+							H = G.copy()
+							I = [i1, i2, i3, i4, i5, i6]
+							for iNode in range(len(nodes_a_dividir)):
+								node = nodes_a_dividir[iNode]
+								veins = list(H.neighbors(node))
+								if I[iNode] == 0:
+									x, y = 2, 3
+								elif I[iNode] == 1:
+									x, y = 1, 3
+								elif I[iNode] == 2:
+									x, y = 1, 2
+								else:
+									error()
+								wx = pes(H, node, veins[x])
+								#print(wx)
+								wy = pes(H, node, veins[y])
+								H.remove_edge(node, veins[x])
+								H.remove_edge(node, veins[y])
+								nou_node = node + .1;
+								H.add_weighted_edges_from([[nou_node, veins[x], wx], [nou_node, veins[y], wy]])
+							S.add(H)
+	return S
+
+def camiMesLlarg(S, node_i, node_f):
+	#duplica_nodes(G)
+	cami_mes_llarg = None
+	m = 0
+	while len(S) > 0:
+		G = S.pop()
+		camins = list(nx.all_simple_paths(G, node_i, node_f))
+		input_camins = [(cami, G) for cami in camins]
+		pesos_camins = list(map(f, input_camins))
+		longitud_maxima = max(pesos_camins)
+		if longitud_maxima > m:
+			m = longitud_maxima
+			iCami_mes_llarg = pesos_camins.index(longitud_maxima)
+			cami_mes_llarg = camins[iCami_mes_llarg]
+	return cami_mes_llarg, m
+
+def error():
+	print("ERROR")
+	sys.exit
 
 
-'''def duplica_nodes_i_GRAFS(G): # requeriment: màxim de veïns d'un node en tot el graf: 4. (màxim actual: 4). Es compleix :)
-	global labels
-	s = set()
-	nodes_a_modificar = []
-	for node in nodes:
-		veins = list(G.neighbors(node))
-		if len(veins) == 5:
-			print("ERROR: #veins = 5")
-			sys.exit()
-		elif len(veins) == 4:
-			nodes_a_modificar.append(node)
-
-	for node in nodes_a_modificar:
-		G_mod = G.copy()
-		veins = list(G.neighbors(node))
-		nou_node = node + .1
-		G.add_weighted_edges_from([[node, nou_node, 0]])
-		G.add_weighted_edges_from([[nou_node, vei, pes(node, vei)] for vei in veins])
-		labels = nx.get_edge_attributes(G, 'weight')'''
-
-def dual(G):
-	H = nx.Graph()
-	for edge in labels:
-		H.add_node(edge, weight=labels[edge])
-
-	nodesH = list(H.nodes)
-	arestes_per_afegir = []
-	for nodeH in nodesH:
-		for i,j in labels:
-			if (i,j) != nodeH and (i in nodeH or j in nodeH):
-				H.add_edge(nodeH, (i,j))
-	return H
-
-
-def camiMesLlarg(G, node_i, node_f):
-	pass #Funció!
-	camins = list(nx.all_simple_paths(G, node_i, node_f))
-	pesos_camins = list(map(f, camins))
-	longitud_maxima = max(pesos_camins)
-	iCami_mes_llarg = pesos_camins.index(longitud_maxima)
-	cami_mes_llarg = camins[iCami_mes_llarg]
-	return cami_mes_llarg
-
-
-'''# Elimina nodes innecessaris: 1, 100, 14, 15, 19. Total de nodes: 19.
-long1_2 = pes(1, 2)
-long24_100 = pes(24, 100)
-G.remove_edges_from([(1, 2), (24, 100)])
-ajunta(13, 14, 16)
-ajunta(13, 15, 12)
-ajunta(17, 19, 23)
-labels = nx.get_edge_attributes(G, 'weight')'''
-
-
-# Troba tots els camins que no repeteixin aresta ----> Hauria de cercar-ho als apunts d'algorísmia!!!
-#cami_mes_llarg = camiMesLlarg(G, 1, 100)
-#print(cami_mes_llarg)
+S = duplica_graf(G)
+cami_mes_llarg, longitud_maxima = camiMesLlarg(S, 1, 100)
+print(cami_mes_llarg, longitud_maxima)
 
 #grafica_graf(G)
-
-H = dual(G)
